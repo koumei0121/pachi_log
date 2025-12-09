@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パチンコ履歴管理アプリ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>パチンコ履歴アプリ</h1>
+            <button id="toggle-view-btn" class="header-btn">📊 分析へ</button>
+        </header>
+
+        <div id="calendar-view">
+            <div id="total-balance-section">
+                <span>今月の収支</span>
+                <div id="total-balance">Loading...</div>
+            </div>
+
+            <div class="calendar-controls">
+                <button id="prev-month">&lt;</button>
+                <h2 id="current-month">----年 --月</h2>
+                <button id="next-month">&gt;</button>
+            </div>
+
+            <div class="calendar-grid">
+                <div class="weekday sun">日</div>
+                <div class="weekday">月</div>
+                <div class="weekday">火</div>
+                <div class="weekday">水</div>
+                <div class="weekday">木</div>
+                <div class="weekday">金</div>
+                <div class="weekday sat">土</div>
+                <div id="calendar-days"></div>
+            </div>
+            <button id="add-btn" class="fab">+</button>
+        </div>
+
+        <div id="analysis-view" class="hidden">
+            <div class="analysis-tabs">
+                <button class="tab active" data-type="hall">店舗別</button>
+                <button class="tab" data-type="machine">機種別</button>
+            </div>
+            <ul id="ranking-list"></ul>
+        </div>
+
+        <div id="modal" class="hidden">
+            <div class="modal-content">
+                <h3>稼働データの入力</h3>
+                <form id="record-form">
+                    <label>日付: <input type="date" id="input-date" required></label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="rate" value="4円" checked> 4円</label>
+                        <label><input type="radio" name="rate" value="1円"> 1円</label>
+                    </div>
+                    <label>店舗: <input type="text" id="input-hall" required></label>
+                    <label>機種: <input type="text" id="input-machine" required></label>
+                    <div class="row">
+                        <label>投資: <input type="number" id="input-invest" required></label>
+                        <label>回収: <input type="number" id="input-recovery" required></label>
+                    </div>
+                    <label>回転数: <input type="number" id="input-rotation"></label>
+                    <div class="preview-box">
+                        <p>収支: <span id="preview-balance">0</span> 円</p>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" id="close-btn" class="cancel">キャンセル</button>
+                        <button type="submit" class="save">保存</button>
+                    </div>
+                </form>
+                <div class="history-section">
+                    <ul id="day-history-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
