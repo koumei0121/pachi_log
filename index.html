@@ -51,20 +51,39 @@
                 <h3>稼働データの入力</h3>
                 <form id="record-form">
                     <label>日付: <input type="date" id="input-date" required></label>
+                    
                     <div class="radio-group">
                         <label><input type="radio" name="rate" value="4円" checked> 4円</label>
                         <label><input type="radio" name="rate" value="1円"> 1円</label>
                     </div>
+
                     <label>店舗: <input type="text" id="input-hall" required></label>
                     <label>機種: <input type="text" id="input-machine" required></label>
+                    
                     <div class="row">
-                        <label>投資: <input type="number" id="input-invest" required></label>
-                        <label>回収: <input type="number" id="input-recovery" required></label>
+                        <label>投資: <input type="number" id="input-invest" placeholder="0" required></label>
+                        <label>回収: <input type="number" id="input-recovery" placeholder="0" required></label>
                     </div>
-                    <label>回転数: <input type="number" id="input-rotation"></label>
+
+                    <div style="background:#f9f9f9; padding:10px; border-radius:4px; margin:10px 0;">
+                        <div class="row">
+                            <label style="font-size:0.8rem">開始回転数: <input type="number" id="input-start-rot" placeholder="0"></label>
+                            <label style="font-size:0.8rem">現在回転数: <input type="number" id="input-end-rot" placeholder="現在"></label>
+                        </div>
+                        <p style="margin:5px 0 0; text-align:right; font-size:0.9rem;">
+                            実質回転数: <strong><span id="display-calc-rot">0</span></strong> 回転
+                        </p>
+                    </div>
+
+                    <div class="row">
+                        <label>初当たり: <input type="number" id="input-first-hit" placeholder="0"></label>
+                        <label>総当たり: <input type="number" id="input-total-hit" placeholder="0"></label>
+                    </div>
+                    
                     <div class="preview-box">
                         <p>収支: <span id="preview-balance">0</span> 円</p>
                     </div>
+
                     <div class="btn-group">
                         <button type="button" id="close-btn" class="cancel">キャンセル</button>
                         <button type="submit" class="save">保存</button>

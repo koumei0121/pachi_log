@@ -28,10 +28,16 @@ const dayHistoryList = document.getElementById('day-history-list');
 const inputDate = document.getElementById('input-date');
 const inputInvest = document.getElementById('input-invest');
 const inputRecovery = document.getElementById('input-recovery');
+const inputStartRot = document.getElementById('input-start-rot'); 
+const inputEndRot = document.getElementById('input-end-rot');     
+const displayCalcRot = document.getElementById('display-calc-rot'); 
+const inputFirstHit = document.getElementById('input-first-hit'); 
+const inputTotalHit = document.getElementById('input-total-hit'); 
 const previewBalance = document.getElementById('preview-balance');
 
 let currentDate = new Date();
 let pachiData = [];
+let editingId=null;
 
 // --- 初期化 & イベントリスナー ---
 function init() {
@@ -77,6 +83,16 @@ function init() {
             const val = Number(inputRecovery.value) - Number(inputInvest.value);
             previewBalance.textContent = val.toLocaleString();
         });
+    });
+
+    //自動計算ロジック
+    [inputStartRot, inputEndRot].forEach(el => {
+    el.addEventListener('input', () => {
+        const start = Number(inputStartRot.value);
+        const end = Number(inputEndRot.value);
+        const diff = end - start;
+        displayCalcRot.textContent = diff > 0 ? diff : 0;
+    });
     });
 
     // 保存処理
@@ -147,31 +163,89 @@ function renderCalendar() {
 
 function openModal(dateStr) {
     modal.classList.remove('hidden');
+    editingId = null; 
     form.reset();
+    
     inputDate.value = dateStr;
     previewBalance.textContent = "0";
+    displayCalcRot.textContent = "0"; 
     inputDate.onchange = (e) => renderDayHistory(e.target.value);
     renderDayHistory(dateStr);
 }
 
+function startEdit(id) {
+    const target = pachiData.find(item => item.id === id);
+    if (!target) return;
+
+    editingId = id; 
+    
+    inputDate.value = target.date;
+    
+    const radios = document.querySelectorAll('input[name="rate"]');
+    radios.forEach(r => {
+        if (r.value === target.rate) r.checked = true;
+    });
+
+    document.getElementById('input-hall').value = target.hall;
+    document.getElementById('input-machine').value = target.machine;
+    document.getElementById('input-invest').value = target.invest;
+    document.getElementById('input-recovery').value = target.recovery;
+    
+    document.getElementById('input-start-rot').value = target.startRot || '';
+    document.getElementById('input-end-rot').value = target.endRot || '';
+    document.getElementById('display-calc-rot').textContent = target.rotation || 0;
+    
+    document.getElementById('input-first-hit').value = target.firstHit || '';
+    document.getElementById('input-total-hit').value = target.totalHit || '';
+
+    previewBalance.textContent = (target.recovery - target.invest).toLocaleString();
+
+    modal.classList.remove('hidden');
+}
+
 function saveEntry() {
-    const invest = Number(inputInvest.value);
-    const recovery = Number(inputRecovery.value);
-    pachiData.push({
-        id: Date.now(),
+    const invest = Number(document.getElementById('input-invest').value);
+    const recovery = Number(document.getElementById('input-recovery').value);
+    const startRot = Number(document.getElementById('input-start-rot').value);
+    const endRot = Number(document.getElementById('input-end-rot').value);
+    const calcRot = (endRot - startRot) > 0 ? (endRot - startRot) : 0;
+
+    const entryData = {
         date: inputDate.value,
         rate: document.querySelector('input[name="rate"]:checked').value,
         hall: document.getElementById('input-hall').value,
         machine: document.getElementById('input-machine').value,
         invest: invest,
         recovery: recovery,
-        rotation: document.getElementById('input-rotation').value,
-        balance: recovery - invest
-    });
-    syncToCloud();
+        balance: recovery - invest,
+        startRot: startRot,
+        endRot: endRot,
+        rotation: calcRot,
+        firstHit: document.getElementById('input-first-hit').value || 0,
+        totalHit: document.getElementById('input-total-hit').value || 0
+    };
+
+    if (editingId) {
+        const index = pachiData.findIndex(item => item.id === editingId);
+        if (index !== -1) {
+            pachiData[index] = { ...entryData, id: editingId }; // IDは維持
+        }
+    } else {
+        pachiData.push({ ...entryData, id: Date.now() });
+    }
+
+    syncToCloud(); 
+    
+    editingId = null;
     form.reset();
     previewBalance.textContent = "0";
+    displayCalcRot.textContent = "0";
     modal.classList.add('hidden');
+    
+    renderCalendar();
+    if (!analysisView.classList.contains('hidden')) {
+        renderRanking(document.querySelector('.tab.active').dataset.type);
+    }
 }
 
 function deleteEntry(id) {
@@ -186,11 +260,25 @@ function renderDayHistory(dateStr) {
     pachiData.filter(d => d.date === dateStr).forEach(item => {
         const li = document.createElement('li');
         li.className = `history-item ${item.balance >= 0 ? 'win' : 'lose'}`;
+        
+        const rot = item.rotation || 0;
+        const first = item.firstHit || 0;
+        const total = item.totalHit || 0;
+
         li.innerHTML = `
-            <div><strong>${item.machine}</strong><br><span style="font-size:0.8rem;color:#666;">${item.hall} (${item.rate})</span></div>
+            <div>
+                <strong>${item.machine}</strong> <span style="font-size:0.8rem">(${item.rate})</span><br>
+                <span style="font-size:0.8rem; color:#555;">
+                    ${item.hall} <br>
+                    回:${rot} / 初:${first} / 総:${total}
+                </span>
+            </div>
             <div style="text-align:right;">
-                <div style="font-weight:bold;">${item.balance > 0 ? '+' : ''}${item.balance.toLocaleString()}</div>
-                <button onclick="deleteEntry(${item.id})">削除</button>
+                <div style="font-weight:bold; margin-bottom:5px;">
+                    ${item.balance > 0 ? '+' : ''}${item.balance.toLocaleString()}
+                </div>
+                <button onclick="startEdit(${item.id})" class="edit-btn">編集</button>
+                <button onclick="deleteEntry(${item.id})" class="delete-btn">削除</button>
             </div>`;
         dayHistoryList.appendChild(li);
     });
@@ -221,4 +309,5 @@ function renderRanking(type) {
 }
 
 init();
+window.startEdit=startEdit;
 window.deleteEntry = deleteEntry;
