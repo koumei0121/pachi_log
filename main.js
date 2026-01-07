@@ -1,7 +1,7 @@
 // --- Firebase設定 ---
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCLvaZbUO45KNW49A0hcEcG0b7GCWef7So",
+  apiKey: "AIzaSyDJe4QNGOZy7FHv7BCZglp2aLkt8CpVHhM",
   authDomain: "pachi-log-d8f45.firebaseapp.com",
   projectId: "pachi-log-d8f45",
   storageBucket: "pachi-log-d8f45.firebasestorage.app",
@@ -34,6 +34,7 @@ const displayCalcRot = document.getElementById('display-calc-rot');
 const inputFirstHit = document.getElementById('input-first-hit'); 
 const inputTotalHit = document.getElementById('input-total-hit'); 
 const previewBalance = document.getElementById('preview-balance');
+const displayRate=document.getElementById('display-rate');
 
 let currentDate = new Date();
 let pachiData = [];
@@ -77,22 +78,25 @@ function init() {
     });
     document.getElementById('close-btn').addEventListener('click', () => modal.classList.add('hidden'));
 
-    // 収支プレビュー
-    [inputInvest, inputRecovery].forEach(el => {
-        el.addEventListener('input', () => {
-            const val = Number(inputRecovery.value) - Number(inputInvest.value);
-            previewBalance.textContent = val.toLocaleString();
-        });
-    });
+    const updateCalc=()=>{
+        const val=Number(inputRecovery.value) - Number(inputInvest.value);
+        previewBalance.textContent=val.toLocaleString();
 
-    //自動計算ロジック
-    [inputStartRot, inputEndRot].forEach(el => {
-    el.addEventListener('input', () => {
-        const start = Number(inputStartRot.value);
-        const end = Number(inputEndRot.value);
-        const diff = end - start;
-        displayCalcRot.textContent = diff > 0 ? diff : 0;
-    });
+        const diff=Number(inputEndRot.value) - Number(inputStartRot.value);
+        const rotation=diff > 0 ? diff : 0;
+        displayCalcRot.textContent=rotation;
+
+        const invest=Number(inputInvest.value);
+        if(invest > 0 && rotation > 0){
+            const rate=(rotation/invest)*1000;
+            displayRate.textContent=rate.toFixed(1);
+        }else{
+            displayRate.textContent="0.0";
+        }
+    };
+
+    [inputStartRot,inputEndRot,inputInvest,inputRecovery].forEach(el=>{
+        el.addEventListener('input',updateCalc);
     });
 
     // 保存処理
@@ -194,11 +198,18 @@ function startEdit(id) {
     document.getElementById('input-start-rot').value = target.startRot || '';
     document.getElementById('input-end-rot').value = target.endRot || '';
     document.getElementById('display-calc-rot').textContent = target.rotation || 0;
-    
     document.getElementById('input-first-hit').value = target.firstHit || '';
     document.getElementById('input-total-hit').value = target.totalHit || '';
 
     previewBalance.textContent = (target.recovery - target.invest).toLocaleString();
+
+    if(target.ratePer1k){
+        displayRate.textContent=target.ratePer1k;
+    }else{
+        const inv=target.invest || 0;
+        const rot=target.rotation || 0;
+        displayRate.textContent=(inv > 0) ? ((rot /inv)* 1000).toFixed(1) : "0.0";
+    }
 
     modal.classList.remove('hidden');
 }
@@ -209,6 +220,11 @@ function saveEntry() {
     const startRot = Number(document.getElementById('input-start-rot').value);
     const endRot = Number(document.getElementById('input-end-rot').value);
     const calcRot = (endRot - startRot) > 0 ? (endRot - startRot) : 0;
+
+    let ratePer1k=0;
+    if(invest >0 && calcRot >0){
+        ratePer1k=parseFloat(((calcRot/invest)*1000).toFixed(1));
+    }
 
     const entryData = {
         date: inputDate.value,
@@ -221,6 +237,7 @@ function saveEntry() {
         startRot: startRot,
         endRot: endRot,
         rotation: calcRot,
+        ratePer1k: ratePer1k,
         firstHit: document.getElementById('input-first-hit').value || 0,
         totalHit: document.getElementById('input-total-hit').value || 0
     };
@@ -240,6 +257,7 @@ function saveEntry() {
     form.reset();
     previewBalance.textContent = "0";
     displayCalcRot.textContent = "0";
+    displayRate.textContent="0.0";
     modal.classList.add('hidden');
     
     renderCalendar();
@@ -264,13 +282,14 @@ function renderDayHistory(dateStr) {
         const rot = item.rotation || 0;
         const first = item.firstHit || 0;
         const total = item.totalHit || 0;
+        const rate= item.ratePer1k || 0;
 
         li.innerHTML = `
             <div>
                 <strong>${item.machine}</strong> <span style="font-size:0.8rem">(${item.rate})</span><br>
                 <span style="font-size:0.8rem; color:#555;">
                     ${item.hall} <br>
-                    回:${rot} / 初:${first} / 総:${total}
+                    回:${rot} /1k回:${rate} / 初:${first} / 総:${total}
                 </span>
             </div>
             <div style="text-align:right;">
@@ -310,5 +329,4 @@ function renderRanking(type) {
 
 init();
 window.startEdit=startEdit;
-
 window.deleteEntry = deleteEntry;
