@@ -310,4 +310,5 @@ function renderRanking(type) {
 
 init();
 window.startEdit=startEdit;
+
 window.deleteEntry = deleteEntry;
