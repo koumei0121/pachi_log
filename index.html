@@ -70,9 +70,15 @@
                             <label style="font-size:0.8rem">開始回転数: <input type="number" id="input-start-rot" placeholder="0"></label>
                             <label style="font-size:0.8rem">現在回転数: <input type="number" id="input-end-rot" placeholder="現在"></label>
                         </div>
-                        <p style="margin:5px 0 0; text-align:right; font-size:0.9rem;">
-                            実質回転数: <strong><span id="display-calc-rot">0</span></strong> 回転
-                        </p>
+                        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:5px;">
+                            <p style="margin:5px 0 0; text-align:right; font-size:0.9rem;">
+                                実質回転数: <strong><span id="display-calc-rot">0</span></strong> 回転
+                            </p>
+                            <p style="margin:0; font: size 1rem; color:#d63384; font-weight:bold;">
+                                1k:<span id="display-rate">0.0</span>
+                            </p>
+                        </div>
+                        
                     </div>
 
                     <div class="row">
