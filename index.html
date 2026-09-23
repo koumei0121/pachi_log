@@ -3,28 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>パチンコ履歴管理アプリ</title>
+    <title>収支管理アプリ</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="app-container">
+        <!-- ヘッダー -->
         <header>
-            <h1>パチンコ履歴アプリ</h1>
-            <button id="toggle-view-btn" class="header-btn">📊 分析へ</button>
+            <h1>収支管理</h1>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span id="user-display-name" style="font-size: 0.75rem; color: #cbd5e1;"></span>
+                <button id="auth-btn" class="header-btn">Googleログイン</button>
+                <button id="toggle-view-btn" class="header-btn">分析表示</button>
+            </div>
         </header>
 
+        <!-- カレンダー画面 -->
         <div id="calendar-view">
             <div id="total-balance-section">
-                <span>今月の収支</span>
+                <span>月間トータル収支</span>
                 <div id="total-balance">Loading...</div>
             </div>
-
             <div class="calendar-controls">
                 <button id="prev-month">&lt;</button>
                 <h2 id="current-month">----年 --月</h2>
                 <button id="next-month">&gt;</button>
             </div>
-
             <div class="calendar-grid">
                 <div class="weekday sun">日</div>
                 <div class="weekday">月</div>
@@ -38,56 +42,76 @@
             <button id="add-btn" class="fab">+</button>
         </div>
 
+        <!-- 分析画面 -->
         <div id="analysis-view" class="hidden">
             <div class="analysis-tabs">
-                <button class="tab active" data-type="hall">店舗別</button>
+                <button class="tab active" data-type="hall">ホール別</button>
                 <button class="tab" data-type="machine">機種別</button>
+                <button class="tab" data-type="monthly">月別推移</button>
+                <button class="tab" data-type="yearly">年間推移</button>
             </div>
             <ul id="ranking-list"></ul>
+            <div id="chart-container" class="hidden" style="padding: 15px; position: relative; height: 350px;">
+                <canvas id="balanceChart"></canvas>
+            </div>
         </div>
 
+        <!-- 入力・編集モーダル -->
         <div id="modal" class="hidden">
             <div class="modal-content">
-                <h3>稼働データの入力</h3>
+                <h3>稼働記録の追加 / 編集</h3>
                 <form id="record-form">
                     <label>日付: <input type="date" id="input-date" required></label>
                     
                     <div class="radio-group">
-                        <label><input type="radio" name="rate" value="4円" checked> 4円</label>
-                        <label><input type="radio" name="rate" value="1円"> 1円</label>
+                        <span style="font-size: 0.85rem; font-weight: bold; color: #555; display: block; margin-bottom: 4px; width: 100%;">種別・レート選択:</span>
+                        <label><input type="radio" name="rate" value="4円パチ" checked> 4円パチ</label>
+                        <label><input type="radio" name="rate" value="1円パチ"> 1円パチ</label>
+                        <label><input type="radio" name="rate" value="20円スロ"> 20円スロ</label>
+                        <label><input type="radio" name="rate" value="5円スロ"> 5円スロ</label>
                     </div>
 
-                    <label>店舗: <input type="text" id="input-hall" required></label>
-                    <label>機種: <input type="text" id="input-machine" required></label>
+                    <!-- サジェスト＆クイック入力対応: ホール名 -->
+                    <label>ホール名: 
+                        <input type="text" id="input-hall" list="hall-candidates" placeholder="ホール名を入力" required autocomplete="off">
+                        <datalist id="hall-candidates"></datalist>
+                    </label>
+                    <div id="quick-halls" class="quick-chip-container"></div>
+
+                    <!-- サジェスト＆クイック入力対応: 機種名 -->
+                    <label>機種名: 
+                        <input type="text" id="input-machine" list="machine-candidates" placeholder="機種名を入力" required autocomplete="off">
+                        <datalist id="machine-candidates"></datalist>
+                    </label>
+                    <div id="quick-machines" class="quick-chip-container"></div>
                     
                     <div class="row">
-                        <label>投資: <input type="number" id="input-invest" placeholder="0" required></label>
-                        <label>回収: <input type="number" id="input-recovery" placeholder="0" required></label>
+                        <label style="flex:1"><span id="label-invest">投資(円)</span>: <input type="number" id="input-invest" placeholder="0" required></label>
+                        <label style="flex:1"><span id="label-recovery">回収(円)</span>: <input type="number" id="input-recovery" placeholder="0" required></label>
                     </div>
 
                     <div style="background:#f9f9f9; padding:10px; border-radius:4px; margin:10px 0;">
                         <div class="row">
-                            <label style="font-size:0.8rem">開始回転数: <input type="number" id="input-start-rot" placeholder="0"></label>
-                            <label style="font-size:0.8rem">現在回転数: <input type="number" id="input-end-rot" placeholder="現在"></label>
+                            <label style="font-size:0.8rem; flex:1"><span id="label-start-rot">開始回転数</span>: <input type="number" id="input-start-rot" placeholder="0"></label>
+                            <label style="font-size:0.8rem; flex:1"><span id="label-end-rot">終了回転数</span>: <input type="number" id="input-end-rot" placeholder="0"></label>
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:5px;">
-                            <p style="margin:5px 0 0; text-align:right; font-size:0.9rem;">
-                                実質回転数: <strong><span id="display-calc-rot">0</span></strong> 回転
+                            <p style="margin:5px 0 0; font-size:0.9rem;">
+                                <span id="label-calc-rot">総回転数</span>: <strong><span id="display-calc-rot">0</span></strong>
                             </p>
-                            <p style="margin:0; font: size 1rem; color:#d63384; font-weight:bold;">
-                                1k:<span id="display-rate">0.0</span>
+                            <p style="margin:0; font-size:1rem; color:#d63384; font-weight:bold;">
+                                <span id="label-calc-rate">1k回転率</span>: <span id="display-rate">0.0 /k</span>
                             </p>
                         </div>
-                        
                     </div>
 
                     <div class="row">
-                        <label>初当たり: <input type="number" id="input-first-hit" placeholder="0"></label>
-                        <label>総当たり: <input type="number" id="input-total-hit" placeholder="0"></label>
+                        <label style="flex:1"><span id="label-first-hit">初当り回数</span>: <input type="number" id="input-first-hit" placeholder="0"></label>
+                        <label style="flex:1"><span id="label-total-hit">総大当り回数</span>: <input type="number" id="input-total-hit" placeholder="0"></label>
                     </div>
                     
-                    <div class="preview-box">
-                        <p>収支: <span id="preview-balance">0</span> 円</p>
+                    <div class="preview-box" style="background:#eef2f5; padding:8px; border-radius:4px; margin:10px 0;">
+                        <p style="margin:0; font-weight:bold;">収支換算: <span id="preview-balance">0</span> 円 <span id="preview-coins" style="font-size:0.8rem; color:#666;"></span></p>
                     </div>
 
                     <div class="btn-group">
@@ -95,6 +119,7 @@
                         <button type="submit" class="save">保存</button>
                     </div>
                 </form>
+
                 <div class="history-section">
                     <ul id="day-history-list"></ul>
                 </div>
@@ -102,8 +127,12 @@
         </div>
     </div>
 
+    <!-- Firebase SDK (v8) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="main.js"></script>
 </body>
 </html>
