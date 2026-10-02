@@ -239,7 +239,7 @@ header h1 {
 .rank-2 { color: #c0c0c0; }
 .rank-3 { color: #cd7f32; }
 
-/* --- 入力・編集モーダル（画面の小さなスマホでもスクロール可能に設計） --- */
+/* --- 入力・編集モーダル --- */
 #modal {
     position: fixed;
     top: 0;
@@ -305,7 +305,7 @@ form input {
     margin-bottom: 10px;
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 12px;
 }
 
 .radio-group label {
@@ -316,6 +316,7 @@ form input {
     font-weight: normal;
     font-size: 0.85rem;
     cursor: pointer;
+    white-space: nowrap; /* 追記：ラジオボタンの文字が縦に潰れるのを防ぐ */
 }
 
 /* クイック選択チップ */
@@ -335,7 +336,7 @@ form input {
     font-size: 0.75rem;
     color: #334155;
     cursor: pointer;
-    white-space: nowrap;
+    white-space: nowrap; /* 追記：チップの文字が折り返されるのを防ぐ */
 }
 
 .quick-chip:active {
