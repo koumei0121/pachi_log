@@ -286,7 +286,8 @@ form label {
     font-size: 0.85rem;
 }
 
-form input {
+/* 修正箇所1：ラジオボタンを除外し、テキスト入力のみを100%にする */
+form input:not([type="radio"]) {
     width: 100%;
     padding: 8px 10px;
     margin-top: 3px;
@@ -301,22 +302,35 @@ form input {
     gap: 8px;
 }
 
+/* 修正箇所2：ラジオボタンを上下2段（グリッド）に分けて綺麗に配置する */
 .radio-group {
-    margin-bottom: 10px;
-    display: flex;
-    flex-wrap: wrap;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 左右2列に分割 */
     gap: 12px;
+    align-items: center;
+}
+
+.radio-group span {
+    grid-column: 1 / -1; /* タイトルは全幅にする */
+    margin-bottom: -4px;
 }
 
 .radio-group label {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 3px;
-    margin-right: 0;
+    gap: 6px;
     font-weight: normal;
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     cursor: pointer;
-    white-space: nowrap; /* 追記：ラジオボタンの文字が縦に潰れるのを防ぐ */
+}
+
+/* 修正箇所3：ラジオボタン本体のサイズを正しく固定 */
+.radio-group input[type="radio"] {
+    margin: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
 /* クイック選択チップ */
@@ -336,7 +350,7 @@ form input {
     font-size: 0.75rem;
     color: #334155;
     cursor: pointer;
-    white-space: nowrap; /* 追記：チップの文字が折り返されるのを防ぐ */
+    white-space: nowrap;
 }
 
 .quick-chip:active {
